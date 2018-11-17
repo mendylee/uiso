@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 用戶基本信息管理及子賬號管理 -->
+<!-- DataSet配置 -->
+<packages>
+	<package name="com.xrk.uiac.dal.entity">
+
+		<!-- 系统设置表 -->
+		<dataset name="uiac_push_observer" iscache="0" db="uiac" dataclass="PushObserver"
+			class="core.DataSet">
+			<comtemplates>
+				<!-- 添加观察者 -->
+				<comtemplate name="insertPushObserver" type="insertone"></comtemplate>
+				<!-- 删除观察者 -->
+				<comtemplate name="deletePushObserver" type="delete">
+					<format name="query" paranum="1">{"app_id":%d}</format>
+				</comtemplate>
+				<!-- 查找观察者 -->
+				<comtemplate name="findPushObserver" type="findone">
+					<format name="query" paranum="1">{"app_id":%d}</format>
+				</comtemplate>
+				
+				
+			</comtemplates>
+		</dataset>
+	</package>
+</packages>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 用戶基本信息管理及子賬號管理 -->
+<!-- DataSet配置 -->
+<packages>
+	<package name="com.xrk.uiac.dal.entity">
+	
+		<!-- 用户信息表 -->
+		<dataset name="user" iscache="0" db="uiac-mysql" dataclass="User" class="core.DataSet">
+			<comtemplates>
+				<!-- 添加用户 -->
+				<comtemplate name="insertUser" type="insertone"></comtemplate>
+				
+				<!-- 更新用户状态 -->
+				<comtemplate name="updateUserStatus" type="update">
+					<format name="query" paranum="1">uid=%d</format>
+					<format name="update" paranum="1">status=%d</format>
+				</comtemplate>
+				
+				<!-- 更新用户密码 -->
+				<comtemplate name="updatePassword" type="update">
+					<format name="query" paranum="1">uid=%d</format>
+					<format name="update" paranum="1">password='%s'</format>
+				</comtemplate>
+				
+				<!-- 更新用户删除状态 -->
+				<comtemplate name="updateDeleteStatus" type="update">
+					<format name="query" paranum="1">uid=%d</format>
+					<format name="update" paranum="1">id_del=%d</format>
+				</comtemplate>
+				
+				<!-- 通过uid查询用户 -->
+				<comtemplate name="findWithUid" type="findone">
+					<format name="query" paranum="1">uid=%d</format>
+				</comtemplate>
+				
+				<!-- 通过账号查询用户 -->
+				<comtemplate name="findWithAccount" type="findone">
+					<format name="query" paranum="1">account='%s'</format>
+				</comtemplate>
+				
+				<!-- 测试模板, 计算总量 -->
+				<comtemplate name="count" type="count">
+					<format name="query" paranum="0"></format>
+				</comtemplate>
+				
+				<!-- 测试模板, 物理删除用户 -->
+				<comtemplate name="deleteUser" type="delete">
+					<format name="query" paranum="1">uid=%d</format>
+				</comtemplate>
+				
+			</comtemplates>
+		</dataset>
+		
+		<!-- 用户基本信息表 -->
+		<dataset name="user_info" iscache="0" db="uiac-mysql" dataclass="UserInfo"
+			class="core.DataSet">
+			<comtemplates>
+				<!-- 插入用户基本信息 -->
+				<comtemplate name="insertUserInfo" type="insertone"></comtemplate>
+			
+				<!-- 查询用户基本信息 -->
+				<comtemplate name="findWithUid" type="findone">
+					<format name="query" paranum="1">uid=%d</format>
+				</comtemplate>
+				
+				<!-- 更新用户基本信息 -->
+				<comtemplate name="updateUserInfo" type="update">
+					<format name="query" paranum="1">uid=%d</format>
+				</comtemplate>
+				
+				<!-- 通过手机号查询用户基本信息 -->
+				<comtemplate name="findWithMobile" type="findone">
+					<format name="query" paranum="1">mobile='%s'</format>
+				</comtemplate>
+				
+				<!-- 绑定手机 -->
+				<comtemplate name="updateToBindMobile" type="update">
+					<format name="query" paranum="1">uid=%d</format>
+					<format name="update" paranum="2">mobile_is_verify=%d,mobile='%s'</format>
+				</comtemplate>
+				
+				<!-- 绑定邮箱 -->
+				<comtemplate name="updateToBindEmail" type="update">
+					<format name="query" paranum="1">uid=%d</format>
+					<format name="update" paranum="2">email_is_verify=%d,email='%s'</format>
+				</comtemplate>
+				
+				<!-- 测试模板, 物理删除用户 -->
+				<comtemplate name="deleteUser" type="delete">
+					<format name="query" paranum="1">uid=%d</format>
+				</comtemplate>
+				
+			</comtemplates>
+		</dataset>
+		
+		<!-- 用户扩展信息表 -->
+		<dataset name="user_extend_info" iscache="0" db="uiac-mysql" dataclass="UserExtendInfo"
+			class="core.DataSet">
+			<comtemplates>
+				<!-- 插入用户的所有扩展信息 -->
+				<comtemplate name="minsert" type="minsert"></comtemplate>
+			
+				<!-- 查询用户的所有扩展信息 -->
+				<comtemplate name="mfindWithUid" type="mfind">
+					<format name="query" paranum="1">uid=%d</format>
+				</comtemplate>
+				
+				<!-- 更新用户的所有扩展信息 -->
+				<comtemplate name="updateWithUid" type="update">
+					<format name="query" paranum="2">uid=%d and ext_key='%s'</format>
+					<format name="update" paranum="1">ext_value='%s'</format>
+				</comtemplate>
+				
+				<!-- 删除指定用户的所有扩展信息 -->
+				<comtemplate name="deleteWithUid" type="delete">
+					<format name="query" paranum="1">uid=%d</format>
+				</comtemplate>
+				
+			</comtemplates>
+		</dataset>
+
+		<!-- 用户统计信息表 -->
+		<dataset name="user_stat" iscache="0" db="uiac-mysql" dataclass="UserStat"
+			class="core.DataSet">
+			<comtemplates>
+				<!-- 插入用户基本信息 -->
+				<comtemplate name="insertUserStat" type="insertone"></comtemplate>
+			
+				<!-- 查询用户的统计信息 -->
+				<comtemplate name="findWithUid" type="findone">
+					<format name="query" paranum="1">uid=%d</format>
+				</comtemplate>
+				
+				<!-- 更新用户的统计信息 -->
+				<comtemplate name="updateWithUid" type="update">
+					<format name="query" paranum="1">uid=%d</format>
+				</comtemplate>
+			</comtemplates>
+		</dataset>
+	</package>
+</packages>

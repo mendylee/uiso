@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<!-- 集群客户端服务器配置 -->
+	<clustclients>
+		<!-- Mongodb数据库服务配置 -->
+		<clustclient name="mongoclustclient1" type="0" class="db.mongo.MongodbClient">
+			<servers>
+				<server 
+					name="server1" 
+					id="0" 
+					policy="3"
+					fsync="${mongo.fsync}"
+					host="${mongo.server1.host}" 
+					port="${mongo.server1.port}"
+					user="${mongo.user}"
+					schema="${mongo.schema}"
+					pass="${mongo.password}"
+					weight="1" 
+					timeout="1" />
+				<server 
+                    name="server2" 
+                    id="1" 
+                    policy="3"
+                    fsync="${mongo.fsync}"
+                    host="${mongo.server2.host}"
+                    port="${mongo.server2.port}"
+                    user="${mongo.user}"
+                    schema="${mongo.schema}"
+                    pass="${mongo.password}"
+                    weight="1" 
+                    timeout="1" />
+			</servers>
+		 </clustclient>		 
+	</clustclients>

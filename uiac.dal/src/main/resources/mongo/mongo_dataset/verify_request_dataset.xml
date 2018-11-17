@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- DataSet配置 -->
+<packages>
+	<package name="com.xrk.uiac.dal.entity">
+	
+		<!-- 验证请求表 -->
+		<dataset name="uiac_verify_request" iscache="0" db="${mongo.db}" dataclass="VerifyRequest"
+			class="core.DataSet">
+			<comtemplates>
+				<!-- 插入一条数据 -->
+				<comtemplate name="insert" type="insertone"></comtemplate>
+			
+				<!-- 通过手机号查找一条记录 -->
+				<comtemplate name="findWithMobile" type="findone">
+					<format name="query" paranum="1">{"mobile":"%s"}</format>
+				</comtemplate>
+				
+				<!-- 通过手机号更新一条记录 -->
+				<comtemplate name="updateWithMobile" type="update">
+					<format name="query" paranum="1">{"mobile":"%s"}</format>
+					<format name="update" paranum="1">{$set:{"verify_status":%d}}</format>
+				</comtemplate>
+				
+				<!-- 通过手机号删除一条记录 -->
+				<comtemplate name="deleteWithMobile" type="delete">
+					<format name="query" paranum="1">{"mobile":"%s"}</format>
+				</comtemplate>
+			</comtemplates>
+		</dataset>
+		
+	</package>
+</packages>

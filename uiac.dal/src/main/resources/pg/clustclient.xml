@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<!-- 集群客户端服务器配置 -->
+	<clustclients>
+		 <!-- pg数据库服务配置 -->
+		 <clustclient name="pgsqlclustclient1" type="1" class="db.pgsql.PgsqldbClient">
+			<servers>
+				<server name="server1" 
+						id="0" 
+						url="jdbc:postgresql://127.0.0.1:5432/uiac" 
+						driver="org.postgresql.Driver" 
+						user="postgres" 
+						pass="20130103" 
+						auth="" 
+						timeout="10000"/>
+			</servers>
+		 </clustclient>
+	</clustclients>

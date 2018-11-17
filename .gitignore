@@ -1,0 +1,13 @@
+.project
+.classpath
+*.class
+/.settings/
+/logs/
+/shared/log/
+/uiac.bll/logs
+/uiac.service/logs
+/uiac.service/shared/log/
+/IntegrationTest/log.txt
+/install/
+/packages/
+.DS_Store

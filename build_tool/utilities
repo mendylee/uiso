@@ -1,0 +1,253 @@
+#!/bin/bash
+
+. ~/.bash_profile
+
+if [ -f ${HOME}/.jyhd.cfg ]; then
+ . ${HOME}/.jyhd.cfg
+fi
+
+JYHD_INSTALL_PATH=${INSTALL_PATH}/jyhdserver/current
+JYHD_BIN_PATH=${JYHD_INSTALL_PATH}/bin
+
+checkOperationPermission()
+{  
+  let op_userid=`id -u`
+  if [ ! -z $INSTALLL_USERID ]; then  
+    if [ $op_userid -eq $INSTALLL_USERID ];then
+      echo "> Operation permission check passed!"
+    else
+      echo "Warnning: Operation permission check failure, only uid ($INSTALLL_USERID) is permitted!"
+      exit 1
+    fi
+  fi
+}
+
+function jyhdUpdateCrontab()
+{
+  #delete old config
+  username=`whoami`
+  crontab -l > /tmp/jyhdcronfile.${username}.1
+  sed /jyhdMonitor/d /tmp/jyhdcronfile.${username}.1 > /tmp/jyhdcronfile.${username}
+  crontab -r
+
+  let config_exist=`grep 'jyhdBackupLog.sh' /tmp/jyhdcronfile.${username} | wc -l`
+  if [ ${config_exist} -gt 0 ]; then
+	  sed -i '/jyhdBackupLog.sh/d' /tmp/jyhdcronfile.${username}
+  fi
+  
+  echo "* * * * * bash ${JYHD_BIN_PATH}/jyhdMonitor.sh >/dev/null 2>&1" >> /tmp/jyhdcronfile.${username}
+  
+  crontab /tmp/jyhdcronfile.${username}
+  rm -rf /tmp/jyhdcronfile.${username}*
+}
+
+
+jyhdRemoveCrontab()
+{
+  checkOperationPermission
+  username=`whoami`
+  crontab -l > /tmp/cronfile.${username}.1
+  sed /jyhdMonitor/d /tmp/cronfile.${username}.1 > /tmp/cronfile.${username}.2
+  sed /jyhdBackupLog/d /tmp/cronfile.${username}.2 > /tmp/cronfile.${username}
+  
+  crontab -r
+  
+  crontab /tmp/cronfile.${username}
+  rm -rf /tmp/cronfile.${username}*
+}
+
+grantDbAccess()
+{
+  mysql -u${DB_USERNAME} -p${DB_USERPASS} -e "grant select, insert, update, delete on ${DB_NAME}.* to ${DB_USERNAME}@'%' IDENTIFIED BY '${DB_USERPASS}'"
+  echo "> Done!"
+}
+
+backupDatabase()
+{  
+  echo "> Backup the database ..."
+  cur_date=`date "+%Y%m%d"`
+  host=`hostname`  
+  db_backup_path=$1
+  mysqldump -h ${DB_HOST} -u${DB_USERNAME} -p${DB_USERPASS} --databases ${DB_NAME} > ${db_backup_path}/${DB_NAME}_${cur_date}@${host}.sql
+  echo "> Backup the VIS database completed!"
+}
+
+recoverDatabase()
+{
+  db_file=$1
+  
+  echo "> Recover the database ..."
+  if [ -e ${db_file} ]; then  
+    mysql -h ${DB_HOST} -u ${DB_USERNAME} -p${DB_USERPASS} < ${db_file}
+    echo "> Recover the database completed!"
+  else
+    echo "> Recover failure because db file ${db_file} does not exist"
+  fi
+}
+
+recoverPasswdOfRoot()
+{
+  echo "update users set password=\"123456\" where username=\"root\";" > $DB_INIT_SQLFILE 
+  mysql -h ${DB_HOST} -u${DB_USERNAME} -p${DB_USERPASS} -D ${DB_NAME} < $DB_INIT_SQLFILE
+  echo "> Recover the passwd to default value,Done!"
+}
+
+updateServerActiveStat()
+{
+  state=$1    #true or false
+  let type=0
+  case $SERVER_TYPE in
+    NOTICE)  type=0 ;;
+    CHAT)    type=1 ;;
+    MOMENT) type=2 ;;
+    PARTY)   type=3 ;;
+    CONN)    type=4 ;;    
+    *)  ;;
+  esac
+  
+  if [ -z $SERVER_IP ];then
+    return  
+  fi
+  
+  INTERNAL_IP=`/sbin/ifconfig -a|grep -B 2 RUNNING|grep "inet addr"|grep -v "127.0.0.1"|cut -d ':' -f2|cut -d ' ' -f1|grep -v "$SERVER_IP" |sed -n '1p'`
+  if [ -z $INTERNAL_IP ]; then    
+    INTERNAL_IP=$SERVER_IP
+  fi
+  
+  
+  echo "select * from app_servers where ip='$SERVER_IP' and type=$type;" >  tmp_sql_file
+  let rec_num=$(mysql -h ${DB_HOST} -u${DB_USERNAME} -p${DB_USERPASS} -D ${DB_NAME} < tmp_sql_file| wc -l)
+  
+  if [ $rec_num -gt 0 ]; then
+    echo "update  app_servers set active=$state where ip='$SERVER_IP' and type='$type';" >  tmp_sql_file
+    mysql -h ${DB_HOST} -u${DB_USERNAME} -p${DB_USERPASS} -D ${DB_NAME} < tmp_sql_file
+    
+  else
+    echo "insert into app_servers(active,ip,internal_ip,port,type) value($state,'$SERVER_IP','$INTERNAL_IP',20000,$type); " >  tmp_sql_file
+    mysql -h ${DB_HOST} -u${DB_USERNAME} -p${DB_USERPASS} -D ${DB_NAME} < tmp_sql_file
+  fi
+  rm -rf tmp_sql_file
+}
+
+updateServerStatForAll()
+{
+  state=$1    #true or false
+  server=$2   #server ip
+  
+  if [ -z $server ];then
+    return  
+  fi
+ 
+  echo "update  app_servers set active=$state where ip='$server';" >  tmp_sql_file
+  mysql -h ${DB_HOST} -u${DB_USERNAME} -p${DB_USERPASS} -D ${DB_NAME} < tmp_sql_file
+  rm -rf tmp_sql_file
+ 
+}
+
+check_web_alived()
+{
+  URL="http://$SERVER_IP:8080/rest/ping.json"
+  HTTP_CODE=`curl --connect-timeout 5 -o /dev/null -s -w "%{http_code}" "${URL}"`
+  if [ $HTTP_CODE != 200 ];then
+    updateServerActiveStat false
+  else
+    updateServerActiveStat true 
+  fi
+}
+
+connserver_check_alived()
+{
+  echo "select ip from app_servers;" >  tmp_sql_file
+  serverip_list=`mysql -h ${DB_HOST} -u${DB_USERNAME} -p${DB_USERPASS} -D ${DB_NAME} < tmp_sql_file | sed '1 d' | awk '!a[$0]++'`
+  
+  for server in $serverip_list
+  do    
+    URL="http://$server:8080/rest/access"
+    HTTP_CODE=`curl --connect-timeout 5 -o /dev/null -s -w "%{http_code}" "${URL}"`
+    if [ $HTTP_CODE != 200 ];then
+      updateServerStatForAll false $server
+    else
+      updateServerStatForAll true $server
+    fi 
+  done  
+}
+
+
+
+
+install_3rdparty()
+{
+  JYHD_INSTALL_PATH=${INSTALL_PATH}/jyhdserver/current
+  JYHD_3RD_PATH=${JYHD_INSTALL_PATH}/3rdparty
+  
+  cd ${JYHD_3RD_PATH}
+  PKG_LIST=`ls *.tar.bz`
+  echo "Detect the 3rdparty list : $PKG_LIST"
+  
+  for PKG in $PKG_LIST;
+  do
+    let install_flag=1
+    while [ $install_flag -gt 0 ]
+    do
+      module_name=`echo $PKG | awk -F ".tar" '{print $1}' `
+      read -p "Are you sure to install ${module_name} ? (y/n, default is n) " X
+      if [ -z $X ]; then
+        let install_flag=0
+      fi
+    
+      case "$X" in
+        y|yes|Y|Yes)
+          tar -xf ${PKG} ./INSTALL -C .         
+          ./INSTALL ${PKG}
+          let install_flag=0
+          rm -rf ./INSTALL
+        ;;
+        n|no|N|No) let install_flag=0 ;;
+        *)
+      esac
+    done
+  done
+  
+}
+
+
+
+system_collection()
+{ 
+  IF_NAME=eth1
+  BAND_WIDTH=2000    #KB
+  
+  . ~/.jyhd.cfg
+  
+  memtotal=$(free -m |sed -n "2p"|awk '{print $2}')
+  memused=$(free -m |sed -n "3p"|awk '{print $3}')
+  memused_percent=$(awk 'BEGIN {x='$memused';y='$memtotal';printf "%.f\n",(x/y)*100}')
+  
+  cpud=$(/usr/bin/iostat -c 5 2|awk 'NR==7 {print $6}')
+  cpu_percent=$(awk 'BEGIN {i='$cpud';printf "%.f\n",100-i}')
+  
+  net_tx=$(sar -n DEV  2 1 |grep ${IF_NAME} |grep Average|awk '{print $4}')
+  net_tx_percent=$(awk 'BEGIN {x='$net_tx';y='$BAND_WIDTH';printf "%.f\n",(x/y)*100}')
+  
+  #echo ">>>>>>>>>>>>>>>>>>>>> [$SERVER_IP] >>>>>>>>>>>>>>>>>>>>>>>>>
+  #IP:        $SERVER_IP 
+  #MEM USED:  $memused_percent% 
+  #CPU USED:  $cpu_percent%
+  #TX BANDWITH USED:  $net_tx_percent%  
+  #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"  
+    
+  if [ -z $SERVER_IP ];then
+    return  
+  fi
+  
+  echo "select * from app_servers where ip='$SERVER_IP';" >  tmp_sql_file
+  let rec_num=$(mysql -h ${DB_HOST} -u${DB_USERNAME} -p${DB_USERPASS} -D ${DB_NAME} < tmp_sql_file| wc -l)
+  
+  if [ $rec_num -gt 0 ]; then
+    echo "update app_servers set cpu=$cpu_percent,mem=$memused_percent,tx=$net_tx where ip='$SERVER_IP';" >  tmp_sql_file
+    mysql -h ${DB_HOST} -u${DB_USERNAME} -p${DB_USERPASS} -D ${DB_NAME} < tmp_sql_file   
+  fi 
+  
+}
+
+

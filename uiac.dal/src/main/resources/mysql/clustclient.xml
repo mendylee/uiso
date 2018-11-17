@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<!-- 集群客户端服务器配置 -->
+	<clustclients>		 
+		 <!-- Mysql数据库服务配置 -->
+		 <clustclient name="mysqlclustclient1" type="1" class="db.mysql.MysqldbClient">
+		 	<servers>
+		 		<server 
+		 			name="server1"
+		 			id="0"
+		 			url="jdbc:mysql://127.0.0.1:3306/uiac-sql?characterEncoding=utf-8" 
+					driver="com.mysql.jdbc.Driver" 
+					user="root" 
+					pass="20130103" 
+					auth="" 
+					timeout="10000" />
+		 	</servers>
+		 </clustclient>		 
+	</clustclients>

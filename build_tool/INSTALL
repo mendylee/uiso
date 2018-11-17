@@ -1,0 +1,241 @@
+#!/bin/bash
+
+## ==========================================================================
+##
+##   INSTALL SCRIPT
+##
+## ==========================================================================
+
+echo -e -n "\e[0m" 
+
+RUN_PATH=`pwd`
+INSTALL_PATH=$HOME
+CONFIG_FILE=${HOME}/.uiac.cfg
+DB_HOST=127.0.0.1
+DB_PORT=27017
+DB_NAME=uiac
+DB_USER=postgres
+DB_PWD=123456
+#DB_TYPE: 1-mongodb,2-postgres,3-mysql
+DB_TYPE=1
+DB_TYPE_NAME=mongodb
+DB_CONFIG_NAME=mongo
+HTTP_PORT=8081
+
+function installUiac()
+{
+  if [ -d ${UIAC_INSTALL_PATH} ]; then
+    rm -rf ${UIAC_INSTALL_PATH}
+  fi
+  mkdir -p ${UIAC_INSTALL_PATH}
+	
+  cp -rf ${RUN_PATH}/install/* ${UIAC_INSTALL_PATH}
+  chmod +x ${UIAC_INSTALL_PATH}/start_uiac.sh
+  chmod +x ${UIAC_INSTALL_PATH}/stop_uiac.sh
+  chmod +x ${UIAC_INSTALL_PATH}/uiacMonitor.sh
+}
+
+function removeTempFile()
+{
+  rm -rf ${UIAC_INSTALL_PATH}/bin
+  rm -rf ${UIAC_INSTALL_PATH}/pg
+  rm -f ${UIAC_INSTALL_PATH}/*.sql
+}
+
+function updateLocalSetting()
+{ 
+  # update .uiac.cfg
+  if [ -f ${CONFIG_FILE} ]; then
+    rm ${CONFIG_FILE}
+  fi
+
+  INSTALLL_USERID=`id -u`
+    
+  echo "UIAC_INSTALL_PATH=${UIAC_INSTALL_PATH}" >> ${CONFIG_FILE}
+  echo "INSTALLL_USERID=${INSTALLL_USERID}" >> ${CONFIG_FILE}
+  
+  # update .bash_profile
+  UIAC_BIN_PATH=${UIAC_INSTALL_PATH}
+  UIAC_LIB_PATH=${UIAC_INSTALL_PATH}/lib
+  
+  let config_exist=`grep "PATH" ~/.bash_profile | grep "${UIAC_BIN_PATH}" | wc -l`
+  if [ ${config_exist} -eq 0 ]; then
+    sed -i '/export PATH=/d' ~/.bash_profile
+    sed -i '/export LD_LIBRARY_PATH=/d' ~/.bash_profile
+    echo "export PATH=${UIAC_BIN_PATH}:$PATH" >> ~/.bash_profile
+    echo "export LD_LIBRARY_PATH=${UIAC_LIB_PATH}:$LD_LIBRARY_PATH" >> ~/.bash_profile    
+  fi
+  sed -i '/UIAC_CONFIG_FILE/d' ~/.bash_profile
+  echo "export UIAC_CONFIG_FILE=${CONFIG_FILE}" >> ~/.bash_profile
+}
+
+source ~/.bash_profile
+
+if [ -f ${CONFIG_FILE} ];then
+   . ${CONFIG_FILE}
+fi
+
+#read -p "Server listen port(default is ${HTTP_PORT}): " server_port
+              
+#if [ ! -z $server_port ]; then
+#  HTTP_PORT=$server_port
+#fi
+
+let db_info_result=1
+while [ $db_info_result -gt 0 ]
+do
+  read -p "Install path (default is ${INSTALL_PATH}): " path_input
+
+  if [ ! -z $path_input ]; then
+    if [ ! -d $path_input ]; then
+      mkdir -p $path_input
+    fi
+  
+    INSTALL_PATH=$path_input
+  fi
+
+  db_type_status=0
+ 
+  while [ ${db_type_status} -eq 0 ]
+  do
+    read -p "Database type (default is ${DB_TYPE}, optional: 1=mongodb, 2=postgresql, 3=mysql ):" db_type
+    if [ ! -z "$db_type" ]; then
+      DB_TYPE=$db_type
+    fi
+    db_type_status=1
+
+    if [ ${DB_TYPE} == "1" ]; then
+      DB_PORT=27017
+      DB_TYPE_NAME=mongodb
+      DB_CONFIG_NAME=mongo
+    elif [ ${DB_TYPE} == "2" ]; then
+      DB_PORT=5432
+      DB_TYPE_NAME=postgreSql
+      DB_CONFIG_NAME=pg
+      DB_USER=postgres
+    elif [ ${DB_TYPE} == "3" ]; then
+      DB_PORT=3306
+      DB_TYPE_NAME=mysql
+      DB_CONFIG_NAME=mysql
+      DB_USER=root
+    else
+      echo "Database type input error, please retry!"
+      db_type_status=0
+    fi
+  done
+
+  read -p "DB server IP (default is ${DB_HOST}):" db_host
+  if [ ! -z "$db_host" ]; then
+    DB_HOST=$db_host
+  fi
+  
+  read -p "DB port : (default is ${DB_PORT}): " db_port
+  if [ ! -z $db_port ]; then
+    DB_PORT=$db_port
+  fi
+
+  if [ ${DB_TYPE} != "1" ]; then     
+
+    read -p "DB name : (default is ${DB_NAME}): " db_name
+    if [ ! -z $db_name ]; then
+      DB_NAME=$db_name
+    fi
+
+    read -p "DB user : (default is ${DB_USER}): " db_user
+    if [ ! -z $db_user ]; then
+      DB_USER=$db_user
+    fi
+
+    read -p "DB password : (default is ${DB_PWD}): " db_pwd
+    if [ ! -z $db_pwd ]; then
+      DB_PWD=$db_pwd
+    fi
+
+  fi
+
+  echo -e -n "\e[32m"
+  echo "Are you sure install info is: 
+    Install Path : ${INSTALL_PATH}
+    Database Type: ${DB_TYPE_NAME}
+    Database Host: ${DB_HOST}
+    Database Port: ${DB_PORT}"
+
+  if [ ${DB_TYPE} != "1" ]; then
+   echo "    Database Name: ${DB_NAME}
+    Database User: ${DB_USER}
+    Database Pass: ${DB_PWD}"
+  fi
+
+  echo -e -n "\e[5m"
+  read -p " (y/n, default is no) " X 
+  echo -e -n "\e[0m"  
+  if [ -z $X ]; then
+    X=n
+  fi
+
+  case "$X" in
+    y|yes|Y|Yes)
+      let db_info_result=0
+      DB_HOST=$db_host;;
+    n|no|N|No);;
+    *)
+  esac
+done
+
+command -v stop_uiac.sh >/dev/null 2>&1 && { stop_uiac.sh; }
+
+echo "1> Extract the install the package ..."
+
+UIAC_INSTALL_PATH=${INSTALL_PATH}/uiacserver
+  
+echo "2> Install package to ${UIAC_INSTALL_PATH} ..."
+installUiac
+
+echo "3> update app.properties"
+
+sed -i 's/host=[[:digit:].]*/host='${DB_HOST}'/g' ${UIAC_INSTALL_PATH}/conf/app.properties
+sed -i 's/port=[[:digit:]]*/port='${DB_PORT}'/g' ${UIAC_INSTALL_PATH}/conf/app.properties
+sed -i 's/db.type=[[:digit:]]*/db.type='${DB_TYPE}'/g' ${UIAC_INSTALL_PATH}/conf/app.properties
+
+ 
+if [ ${DB_TYPE} != "1" ]; then
+  sed -i 's/db.name=[[:alnum:]]*/db.name='${DB_NAME}'/g' ${UIAC_INSTALL_PATH}/conf/app.properties
+  sed -i 's/user=[[:alnum:]]*/user='${DB_USER}'/g' ${UIAC_INSTALL_PATH}/conf/app.properties
+  sed -i 's/password=\S*/password='${DB_PWD}'/g' ${UIAC_INSTALL_PATH}/conf/app.properties
+fi
+
+echo "3.1> update database config"
+if [ ${DB_TYPE} == "1" ]; then
+  sed -i 's/host="[[:digit:].]*"/host="'${DB_HOST}'"/g' ${UIAC_INSTALL_PATH}/conf/${DB_CONFIG_NAME}/clustclient.xml
+  sed -i 's/port="[[:digit:]]*"/port="'${DB_PORT}'"/g' ${UIAC_INSTALL_PATH}/conf/${DB_CONFIG_NAME}/clustclient.xml
+elif [ ${DB_TYPE} == "2" ]; then
+  sed -i 's/postgresql:\/\/[[:digit:].]*:[[:digit:]]*\/[[:alnum:]_-]*/postgresql:\/\/'${DB_HOST}':'${DB_PORT}'\/'${DB_NAME}'/g' ${UIAC_INSTALL_PATH}/conf/${DB_CONFIG_NAME}/clustclient.xml
+  sed -i 's/user="[[:alnum:]_]*"/user="'${DB_USER}'"/g' ${UIAC_INSTALL_PATH}/conf/${DB_CONFIG_NAME}/clustclient.xml
+  sed -i 's/pass="\S*"/pass="'${DB_PWD}'"/g' ${UIAC_INSTALL_PATH}/conf/${DB_CONFIG_NAME}/clustclient.xml
+
+  echo "3.2> init postgresql database"
+  echo "> drop exists database: ${DB_NAME}"
+  ${UIAC_INSTALL_PATH}/pg/bin/dropdb --host=${DB_HOST} --username=${DB_USER} ${DB_NAME}
+  
+  echo "> create new database: ${DB_NAME}"
+  ${UIAC_INSTALL_PATH}/pg/bin/createdb --host=${DB_HOST} --username=${DB_USER} ${DB_NAME}
+
+  echo "> crate database table and index"
+  ${UIAC_INSTALL_PATH}/pg/bin/psql --host=${DB_HOST} --username=${DB_USER} --dbname=${DB_NAME} --file=${UIAC_INSTALL_PATH}/uiac_pgsql.sql
+  
+elif [ ${DB_TYPE} == "3" ]; then
+  sed -i 's/mysql:\/\/[[:digit:].]*:[[:digit:]]*\/[[:alnum:]_-]*/mysql:\/\/'${DB_HOST}':'${DB_PORT}'\/'${DB_NAME}'/g' ${UIAC_INSTALL_PATH}/conf/${DB_CONFIG_NAME}/clustclient.xml
+  sed -i 's/user="[[:alnum:]_]*"/user="'${DB_USER}'"/g' ${UIAC_INSTALL_PATH}/conf/${DB_CONFIG_NAME}/clustclient.xml
+  sed -i 's/pass="\S*"/pass="'${DB_PWD}'"/g' ${UIAC_INSTALL_PATH}/conf/${DB_CONFIG_NAME}/clustclient.xml
+fi
+
+echo "4> Save uiac setting to file: ${CONFIG_FILE} "
+
+updateLocalSetting
+removeTempFile
+
+source ~/.bash_profile
+
+echo "**********************************************************************************************"
+echo "*     UIAC Server install finished, please run 'start_uiac.sh' command start uiac server !   *"
+echo "**********************************************************************************************"

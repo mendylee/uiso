@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.xiangrikui.api</groupId>
+		<artifactId>uiac</artifactId>
+		<version>1.4.1</version>
+	</parent>
+	<artifactId>uiac-bll</artifactId>
+	<packaging>jar</packaging>
+	<name>uiac.bll</name>
+	<url>http://maven.apache.org</url>
+	<build>
+		<testResources>
+			<testResource>
+				<directory>../uiac.dal/src/main/resource</directory>
+			</testResource>
+		</testResources>
+	</build>
+	<dependencies>
+		<!-- uiac.bl需要使用到uiac.dal中的类，所以需要添加对uiac.dal模块的依赖 -->
+		<dependency>
+			<groupId>com.xiangrikui.api</groupId>
+			<artifactId>uiac-dal</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<!-- uiac.bl需要使用到uiac.common中的类，所以需要添加对uiac.common模块的依赖 -->
+		<dependency>
+			<groupId>com.xiangrikui.api</groupId>
+			<artifactId>uiac-common</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.spy</groupId>
+			<artifactId>spymemcached</artifactId>
+			<version>2.11.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.esotericsoftware</groupId>
+			<artifactId>kryo</artifactId>
+			<version>3.0.1</version>
+		</dependency>
+	</dependencies>
+</project>

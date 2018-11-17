@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration debug="true">
+	<appender name="FILE" class="org.apache.log4j.RollingFileAppender">
+		<param name="file" value="shared/log/rolling.log" />
+		<param name="MaxFileSize" value="20MB" />
+		<param name="MaxBackupIndex" value="100" />
+		<param name="append" value="true" />
+		<param name="encoding" value="UTF-8" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%5p %d{ISO8601} [%t][%x] %c - %m%n" />
+		</layout>
+	</appender>
+	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d [%t] %-5p %x - %m%n" />
+		</layout>
+
+		<!--限制输出级别 -->
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="LevelMax" value="ERROR" />
+			<param name="LevelMin" value="TRACE" />
+		</filter>
+	</appender>
+	<root>
+		<priority value="debug" />
+		<appender-ref ref="FILE" />
+		<appender-ref ref="CONSOLE" />
+	</root>
+</log4j:configuration>

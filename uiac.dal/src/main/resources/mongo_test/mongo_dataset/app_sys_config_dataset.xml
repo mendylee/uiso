@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 用戶基本信息管理及子賬號管理 -->
+<!-- DataSet配置 -->
+<packages>
+	<package name="com.xrk.uiac.dal.entity">
+
+		<!-- 系统设置表 -->
+		<dataset name="uiac_app_info_extend" iscache="0" db="uiac" dataclass="AppSysConfig"
+			class="core.DataSet">
+			<comtemplates>
+				<!-- 添加系统设置 -->
+				<comtemplate name="insertSysConfig" type="insertone"></comtemplate>
+
+				<!-- 查询所有配置 -->
+				<comtemplate name="findSysConfig" type="mfind">
+					<format name="query" paranum="0"></format>
+				</comtemplate>
+				<!-- 查询单个配置项的值 -->
+				<comtemplate name="findConfigValue" type="findone">
+					<format name="query" paranum="2">{"app_id":%d,"prop_key":"%s"}</format>
+				</comtemplate>
+			</comtemplates>
+		</dataset>
+	</package>
+</packages>

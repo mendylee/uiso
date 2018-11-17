@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--  数据接入层的总体配置，为了便于管理，将不同类型，分为数据库配置和DataSet配置-->
+<configs>
+	<!-- 集群配置文件路径 -->
+	<clustclientconfs>
+		<clustclientconf comment="cluster client">/mysql/clustclient.xml</clustclientconf>
+	</clustclientconfs>
+	
+	<!-- 数据库配置文件路径 -->
+	<databaseconfs>
+		<databaseconf comment="databases">/mysql/database.xml</databaseconf>
+	</databaseconfs>
+	
+	<!-- 数据集配置文件路径 -->
+  	<datasetconfs>
+  		<datasetconf comment="Sys config base info">/mysql/mysql_dataset/sys_config_dataset.xml</datasetconf>
+  		<datasetconf comment="user info">/mysql/mysql_dataset/user_dataset.xml</datasetconf>
+  		<datasetconf comment="user subaccount info">/mysql/mysql_dataset/user_subaccount_dataset.xml</datasetconf>
+  		<datasetconf comment="push config base info">/mysql/mysql_dataset/push_observer_dataset.xml</datasetconf>
+  		<datasetconf comment="verify request info">/mysql/mysql_dataset/verify_request_dataset.xml</datasetconf>
+  		<datasetconf comment="app sys config base info">/mysql/mysql_dataset/app_sys_config_dataset.xml</datasetconf>
+  		<datasetconf comment="account change record">/mysql/mysql_dataset/account_change_record_dataset.xml</datasetconf>
+  	</datasetconfs>
+</configs>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- DataSet配置 -->
+<packages>
+	<package name="com.xrk.uiac.dal.entity">
+		
+		<!-- 用户子账号表 -->
+		<dataset name="user_sub_account" iscache="0" db="uiac" dataclass="UserSubAccount"
+			class="core.DataSet">
+			<comtemplates>
+				<!-- 子账号绑定，插入一条子账号记录 -->
+				<comtemplate name="insert" type="insertone"></comtemplate>
+				
+				<!-- 查询指定用户指定app子账号 -->
+				<comtemplate name="findWithUidAndAppid" type="findone">
+					<format name="query" paranum="3">uid=%d and app_id=%d and bind_app_id=%d</format>
+				</comtemplate>
+				
+				<!-- 查询指定用户的所有子账号 -->
+				<comtemplate name="mfindWithUid" type="mfind">
+					<format name="query" paranum="1">uid=%d</format>
+				</comtemplate>
+				
+				<!-- 子账户解绑 -->
+				<comtemplate name="deleteWithUidAndAppid" type="delete">
+					<format name="query" paranum="2">uid=%d and app_id=%d</format>
+				</comtemplate>
+				
+				<!-- 测试模板, 根据uid删除所有子账号 -->
+				<comtemplate name="deleteWithUid" type="delete">
+					<format name="query" paranum="1">uid=%d</format>
+				</comtemplate>
+				
+			</comtemplates>
+		</dataset>
+		
+		<dataset name="app_info" iscache="0" db="uiac" dataclass="AppInfo" class="core.DataSet">
+			<comtemplates>
+				<!-- 插入一条应用信息 -->
+				<comtemplate name="insert" type="insertone"></comtemplate>
+				
+				<!-- 插入多条应用信息 -->
+				<comtemplate name="minsert" type="minsert"></comtemplate>
+				
+				<!-- 通过appId查询一条应用信息记录 -->
+				<comtemplate name="findWithAppId" type="findone">
+					<format name="query" paranum="1">app_id=%d</format>
+				</comtemplate>
+				
+				<comtemplate name="findAll" type="mfind">
+					<format name="query" paranum="0"></format>
+				</comtemplate>
+			</comtemplates>
+		</dataset>
+		
+	</package>
+</packages>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<!-- 集群客户端服务器配置 -->
+	<clustclients>
+		<!-- Mongodb数据库服务配置 -->
+		<clustclient name="mongoclustclient1" type="0" class="db.mongo.MongodbClient">
+			<servers>
+				<server 
+					name="server1" 
+					id="0" 
+					policy="3"
+					fsync="true"
+					host="192.168.9.16" 
+					port="27017"
+					weight="1" 
+					timeout="1" />
+			</servers>
+		 </clustclient>		 
+		<!-- 
+		 <clustclient name="mongoclustclient1" type="0" class="db.mongo.MongodbClient">
+			<servers>
+				<server 
+					name="server1" 
+					id="0" 
+					policy="3"
+					fsync="true"
+					host="192.168.9.16" 
+					port="27017"
+					user="uiac"
+					schema="uiac"
+					pass="xrktest123"
+					weight="1" 
+					timeout="1" />
+			</servers>
+		 </clustclient>
+		  --> 
+	</clustclients>

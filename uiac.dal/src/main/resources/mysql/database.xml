@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databases>
+	<database name="uiac-mysql" isvirtual="0" class="db.mysql.MysqlDatabase" client="mysqlclustclient1" />
+</databases>
